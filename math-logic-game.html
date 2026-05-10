@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I'm Engineer – Math & Logic Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F97316;
+    --teal: #0F4C5C;
+    --yellow: #FBBF24;
+    --green: #22C55E;
+    --red: #EF4444;
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --text: #1C1917;
+    --muted: #78716C;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--teal);
+    color: white;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  .header .logo { font-family: 'Baloo 2', cursive; font-size: 1.5rem; font-weight: 800; }
+  .header .subtitle { font-size: 0.85rem; opacity: 0.8; }
+  .progress-bar { flex: 1; background: rgba(255,255,255,0.2); border-radius: 99px; height: 10px; overflow: hidden; }
+  .progress-fill { background: var(--yellow); height: 100%; border-radius: 99px; transition: width 0.4s; }
+  .score-badge { background: var(--orange); border-radius: 12px; padding: 6px 16px; font-weight: 800; font-size: 1.1rem; white-space: nowrap; }
+
+  /* HOME SCREEN */
+  .home { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  .home-title { font-family: 'Baloo 2', cursive; font-size: 2.8rem; font-weight: 800; color: var(--teal); text-align: center; margin-bottom: 8px; }
+  .home-sub { text-align: center; color: var(--muted); font-size: 1.1rem; margin-bottom: 36px; }
+  .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .task-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 14px;
+    text-align: center;
+    cursor: pointer;
+    border: 3px solid transparent;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .task-card:hover { transform: translateY(-4px); border-color: var(--orange); box-shadow: 0 8px 28px rgba(249,115,22,0.2); }
+  .task-card.done { border-color: var(--green); background: #F0FDF4; }
+  .task-card .num { font-family: 'Baloo 2', cursive; font-size: 2rem; font-weight: 800; color: var(--orange); }
+  .task-card .name { font-size: 0.78rem; font-weight: 700; color: var(--teal); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.3; }
+  .task-card .check { position: absolute; top: 8px; right: 10px; font-size: 1.1rem; }
+
+  /* GAME SCREEN */
+  .game { max-width: 820px; margin: 0 auto; padding: 28px 20px 60px; display: none; }
+  .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--teal); font-weight: 700; cursor: pointer; margin-bottom: 20px; font-size: 1rem; background: none; border: none; }
+  .back-btn:hover { text-decoration: underline; }
+  .task-header { background: var(--teal); color: white; border-radius: var(--radius) var(--radius) 0 0; padding: 20px 28px; }
+  .task-header .task-num { font-size: 0.85rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
+  .task-header .task-title { font-family: 'Baloo 2', cursive; font-size: 1.8rem; font-weight: 800; }
+  .task-body { background: var(--card); border-radius: 0 0 var(--radius) var(--radius); padding: 28px; box-shadow: var(--shadow); }
+  .task-instruction { background: #FFF3E0; border-left: 4px solid var(--orange); padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 600; color: var(--teal); font-size: 1rem; }
+
+  /* QUESTION COUNTER */
+  .q-counter { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .q-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+  .q-dot { width: 12px; height: 12px; border-radius: 50%; background: #E5E7EB; transition: background 0.3s; }
+  .q-dot.done { background: var(--green); }
+  .q-dot.active { background: var(--orange); }
+
+  /* FEEDBACK */
+  .feedback { display: none; text-align: center; padding: 20px; border-radius: 12px; margin-top: 16px; font-size: 1.2rem; font-weight: 800; }
+  .feedback.correct { background: #DCFCE7; color: #166534; display: block; }
+  .feedback.wrong { background: #FEE2E2; color: #991B1B; display: block; }
+
+  /* BUTTONS */
+  .btn { padding: 12px 28px; border-radius: 12px; border: none; cursor: pointer; font-size: 1rem; font-weight: 700; transition: all 0.2s; font-family: 'Nunito', sans-serif; }
+  .btn-primary { background: var(--orange); color: white; }
+  .btn-primary:hover { background: #EA6D0C; transform: translateY(-2px); }
+  .btn-secondary { background: #F3F4F6; color: var(--text); }
+  .btn-secondary:hover { background: #E5E7EB; }
+  .btn-row { display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end; flex-wrap: wrap; }
+
+  /* TASK-SPECIFIC STYLES */
+
+  /* Grid/Canvas tasks */
+  .grid-wrap { display: flex; justify-content: center; margin: 16px 0; }
+  .sym-grid { display: grid; gap: 4px; }
+  .sym-cell {
+    width: 52px; height: 52px; border-radius: 8px; border: 2px solid #E5E7EB;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    cursor: pointer; transition: all 0.2s; background: #F9FAFB; user-select: none;
+  }
+  .sym-cell:hover { border-color: var(--orange); background: #FFF3E0; }
+  .sym-cell.selected { background: var(--teal); border-color: var(--teal); color: white; }
+  .sym-cell.correct-cell { background: var(--green); border-color: var(--green); color: white; }
+  .sym-cell.wrong-cell { background: var(--red); border-color: var(--red); color: white; }
+
+  /* Choice buttons */
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .choice-btn {
+    padding: 16px; border: 3px solid #E5E7EB; border-radius: 12px;
+    background: white; cursor: pointer; font-size: 1rem; font-weight: 700;
+    text-align: center; transition: all 0.2s; font-family: 'Nunito', sans-serif; color: var(--text);
+  }
+  .choice-btn:hover { border-color: var(--orange); background: #FFF3E0; }
+  .choice-btn.selected-correct { border-color: var(--green); background: #DCFCE7; color: #166534; }
+  .choice-btn.selected-wrong { border-color: var(--red); background: #FEE2E2; color: #991B1B; }
+  .choice-btn.reveal-correct { border-color: var(--green); background: #DCFCE7; }
+
+  /* Number input */
+  .num-input { font-size: 2rem; font-weight: 800; text-align: center; width: 120px; border: 3px solid #E5E7EB; border-radius: 12px; padding: 10px; font-family: 'Baloo 2', cursive; color: var(--teal); }
+  .num-input:focus { outline: none; border-color: var(--orange); }
+
+  /* Grid navigation (algorithm tasks) */
+  .algo-grid { display: grid; gap: 2px; border: 3px solid var(--teal); border-radius: 10px; overflow: hidden; width: fit-content; margin: 0 auto 16px; }
+  .algo-cell { width: 56px; height: 56px; background: #F9FAFB; border: 1px solid #D1D5DB; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+  .algo-cell.start { background: var(--orange); }
+  .algo-cell.end { background: var(--green); }
+  .algo-cell.player { background: var(--yellow); }
+  .algo-cell.trail { background: rgba(249,115,22,0.15); }
+
+  /* Arrow selector */
+  .arrow-selector { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+  .arrow-btn { width: 52px; height: 52px; border-radius: 10px; border: 3px solid #E5E7EB; background: white; font-size: 1.5rem; cursor: pointer; transition: all 0.2s; }
+  .arrow-btn:hover { border-color: var(--orange); background: #FFF3E0; }
+  .arrow-btn.active { border-color: var(--orange); background: var(--orange); color: white; }
+
+  /* Sequence display */
+  .seq-display { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 12px; background: #F9FAFB; border-radius: 10px; min-height: 56px; margin-bottom: 10px; }
+  .seq-item { width: 44px; height: 44px; background: var(--teal); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+
+  /* Pattern cards */
+  .pattern-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .pattern-item { width: 56px; height: 56px; border-radius: 10px; border: 2px solid #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; background: white; }
+  .pattern-blank { background: #FFF3E0; border: 3px dashed var(--orange); cursor: pointer; }
+
+  /* CELEBRATION */
+  .celebration { text-align: center; padding: 48px 20px; }
+  .celebration .big-emoji { font-size: 5rem; margin-bottom: 16px; display: block; }
+  .celebration h2 { font-family: 'Baloo 2', cursive; font-size: 2.4rem; color: var(--teal); margin-bottom: 8px; }
+  .celebration p { color: var(--muted); font-size: 1.1rem; margin-bottom: 24px; }
+  .star-row { font-size: 2rem; margin-bottom: 20px; }
+
+  /* Completion screen */
+  .complete-screen { display: none; max-width: 540px; margin: 60px auto; text-align: center; padding: 20px; }
+  .complete-screen h1 { font-family: 'Baloo 2', cursive; font-size: 3rem; color: var(--teal); }
+
+  /* Responsive */
+  @media(max-width:480px){
+    .choices { grid-template-columns: 1fr; }
+    .sym-cell { width: 40px; height: 40px; font-size: 1rem; }
+    .home-title { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">🔢 I'm Engineer</div>
+    <div class="subtitle">Math &amp; Logic</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="headerProgress" style="width:0%"></div></div>
+  <div class="score-badge">⭐ <span id="totalScore">0</span></div>
+</div>
+
+<!-- HOME -->
+<div class="home" id="homeScreen">
+  <div class="home-title">Math &amp; Logic Worksheet 🚀</div>
+  <div class="home-sub">Pilih task yang ingin dikerjakan!</div>
+  <div class="task-grid" id="taskGrid"></div>
+</div>
+
+<!-- GAME -->
+<div class="game" id="gameScreen">
+  <button class="back-btn" onclick="goHome()">← Kembali ke Menu</button>
+  <div class="task-header">
+    <div class="task-num" id="taskNum"></div>
+    <div class="task-title" id="taskTitle"></div>
+  </div>
+  <div class="task-body">
+    <div class="task-instruction" id="taskInstruction"></div>
+    <div class="q-counter">
+      <div class="q-dots" id="qDots"></div>
+      <div style="font-weight:700;color:var(--muted);font-size:0.9rem" id="qLabel"></div>
+    </div>
+    <div id="taskContent"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="btn-row" id="btnRow">
+      <button class="btn btn-primary" id="checkBtn" onclick="checkAnswer()">✅ Cek Jawaban</button>
+      <button class="btn btn-secondary" id="nextBtn" style="display:none" onclick="nextQuestion()">Lanjut →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let totalScore = 0;
+let completedTasks = new Set(JSON.parse(localStorage.getItem('completedTasks')||'[]'));
+let taskScores = JSON.parse(localStorage.getItem('taskScores')||'{}');
+
+function saveState(){
+  localStorage.setItem('completedTasks', JSON.stringify([...completedTasks]));
+  localStorage.setItem('taskScores', JSON.stringify(taskScores));
+}
+
+// ============================================================
+//  TASK DEFINITIONS  (26 tasks, each has questions array)
+// ============================================================
+const TASKS = [
+
+  // 1 COMBINATION — two halves of a divided square, which quadrants are filled?
+  {
+    id:1, name:'COMBINATION',
+    instruction:'Setiap kotak dibagi 4 bagian. Dua kotak digabungkan. Bagian mana yang akan berwarna hitam pada hasilnya? Klik semua bagian yang benar!',
+    type:'combination',
+    questions: buildCombinationQuestions()
+  },
+
+  // 2 DUPLICATION — copy a 3x3 dot pattern
+  {
+    id:2, name:'DUPLICATION',
+    instruction:'Salin pola titik yang ada! Klik kotak yang seharusnya berisi titik ●.',
+    type:'grid_copy',
+    questions: buildGridCopyQuestions()
+  },
+
+  // 3 MIRRORING — mirror a pattern horizontally
+  {
+    id:3, name:'MIRRORING',
+    instruction:'Cerminkan pola! Klik kotak yang seharusnya berisi titik pada hasil cermin (kiri ↔ kanan).',
+    type:'mirror',
+    questions: buildMirrorQuestions()
+  },
+
+  // 4 COUNTING — count dots on domino-style tiles
+  {
+    id:4, name:'COUNTING',
+    instruction:'Hitung jumlah titik pada kedua bagian domino, lalu tulis angkanya!',
+    type:'counting',
+    questions: buildCountingQuestions()
+  },
+
+  // 5 COMPLETING MISSING PARTS
+  {
+    id:5, name:'COMPLETING MISSING PARTS',
+    instruction:'Temukan bagian yang hilang dari pola! Pilih jawaban yang benar.',
+    type:'missing_part',
+    questions: buildMissingPartQuestions()
+  },
+
+  // 6 CONNECTING THE DOTS
+  {
+    id:6, name:'CONNECTING THE DOTS',
+    instruction:'Hubungkan titik-titik untuk membentuk angka! Klik titik dalam urutan yang benar.',
+    type:'dot_connect',
+    questions: buildDotConnectQuestions()
+  },
+
+  // 7 DEFINING OBJECT POSITION
+  {
+    id:7, name:"DEFINING OBJECT'S POSITION",
+    instruction:"Di mana letak benda tersebut? Pilih posisi yang benar (atas, bawah, kiri, kanan, tengah).",
+    type:'position',
+    questions: buildPositionQuestions()
+  },
+
+  // 8 GAME RULES
+  {
+    id:8, name:'KEEPING IN MIND GAME RULES',
+    instruction:'Baca aturan mainnya, lalu jawab pertanyaan berikut!',
+    type:'rules',
+    questions: buildRulesQuestions()
+  },
+
+  // 9 BASIC REASONING
+  {
+    id:9, name:'BASIC REASONING WITH OBJECTS',
+    instruction:'Gunakan logika untuk menjawab! Pilih jawaban yang paling tepat.',
+    type:'reasoning',
+    questions: buildReasoningQuestions()
+  },
+
+  // 10 BE CAREFUL AND CONSISTENT
+  {
+    id:10, name:'BE CAREFUL AND CONSISTENT',
+    instruction:'Perhatikan pola dengan seksama. Angka mana yang melanjutkan pola?',
+    type:'sequence',
+    questions: buildSequenceQuestions()
+  },
+
+  // 11 CALCULATING AND PROVING
+  {
+    id:11, name:'CALCULATING AND PROVING',
+    instruction:'Hitung dan pilih jawaban yang benar!',
+    type:'math',
+    questions: buildMathQuestions()
+  },
+
+  // 12 LINING UP IN ORDER
+  {
+    id:12, name:'LINING UP IN ORDER',
+    instruction:'Urutkan angka-angka dari kecil ke besar! Pilih urutan yang benar.',
+    type:'ordering',
+    questions: buildOrderingQuestions()
+  },
+
+  // 13 IDENTIFYING IDENTICAL ITEMS
+  {
+    id:13, name:'IDENTIFYING IDENTICAL ITEMS',
+    instruction:'Berapa banyak benda yang SAMA PERSIS dengan contoh di atas?',
+    type:'counting_identical',
+    questions: buildIdenticalQuestions()
+  },
+
+  // 14 PATTERN MATCHING
+  {
+    id:14, name:'PATTERN MATCHING',
+    instruction:'Lanjutkan polanya! Pilih gambar berikutnya yang benar.',
+    type:'pattern',
+    questions: buildPatternQuestions()
+  },
+
+  // 15 TRACING THE LINE
+  {
+    id:15, name:'TRACING THE LINE',
+    instruction:'Ikuti jalur yang benar! Klik kotak-kotak secara berurutan dari START ke END.',
+    type:'tracing',
+    questions: buildTracingQuestions()
+  },
+
+  // 16 FIND THE DIFFERENCES
+  {
+    id:16, name:'FIND THE DIFFERENCES',
+    instruction:'Ada berapa perbedaan antara kedua gambar? Pilih jawabannya!',
+    type:'differences',
+    questions: buildDifferencesQuestions()
+  },
+
+  // 17 EXTRACTING COORDINATES
+  {
+    id:17, name:'EXTRACTING COORDINATES',
+    instruction:'Setiap benda ada di titik koordinat (x, y). Tulis koordinatnya!',
+    type:'coordinates',
+    questions: buildCoordinateQuestions()
+  },
+
+  // 18 FINDING EXACT COORDINATE
+  {
+    id:18, name:'FINDING EXACT COORDINATE',
+    instruction:'Klik kotak di koordinat yang disebutkan!',
+    type:'find_coord',
+    questions: buildFindCoordQuestions()
+  },
+
+  // 19 READING AND UNDERSTANDING THE RULE
+  {
+    id:19, name:'READING THE RULE',
+    instruction:'Baca aturan lalu ikuti instruksinya. Pilih jawaban yang sesuai aturan!',
+    type:'rule_reading',
+    questions: buildRuleReadingQuestions()
+  },
+
+  // 20 LEARNING BASIC ALGORITHMS
+  {
+    id:20, name:'LEARNING BASIC ALGORITHMS',
+    instruction:'Ikuti panah-panah pada algoritma. Di mana bola berhenti?',
+    type:'algorithm',
+    questions: buildAlgorithmQuestions()
+  },
+
+  // 21 PRACTICING ALGORITHMIC ACTION
+  {
+    id:21, name:'PRACTICING ALGORITHMIC ACTION',
+    instruction:'Tulis algoritma (urutan panah) untuk menggerakkan bola dari START ke FINISH!',
+    type:'write_algorithm',
+    questions: buildWriteAlgorithmQuestions()
+  },
+
+  // 22 LOOPING
+  {
+    id:22, name:'LOOPING',
+    instruction:'Serangkaian gerakan diulang. Berapa kali setiap arah diulang? Tulis angkanya!',
+    type:'looping',
+    questions: buildLoopingQuestions()
+  },
+
+  // 23 PRACTICING LOOPS
+  {
+    id:23, name:'PRACTICING LOOPS',
+    instruction:'Ubah urutan gerakan menjadi loop (pengulangan). Pilih loop yang tepat!',
+    type:'loop_practice',
+    questions: buildLoopPracticeQuestions()
+  },
+
+  // 24 PROGRAM FLOW WITH ADDITION
+  {
+    id:24, name:'PROGRAM FLOW WITH ADDITION',
+    instruction:'Ikuti alur program. Hitung hasil akhirnya!',
+    type:'program_flow',
+    questions: buildProgramFlowQuestions()
+  },
+
+  // 25 BASIC PROGRAMMING - ALGORITHMS
+  {
+    id:25, name:'BASIC PROGRAMMING - ALGORITHMS',
+    instruction:'Baca kode program dan prediksi hasilnya!',
+    type:'code_algo',
+    questions: buildCodeAlgoQuestions()
+  },
+
+  // 26 BASIC PROGRAMMING - CONDITION
+  {
+    id:26, name:'BASIC PROGRAMMING - CONDITION',
+    instruction:'Baca kondisi IF/ELSE dan tentukan output program!',
+    type:'code_condition',
+    questions: buildCodeConditionQuestions()
+  },
+];
+
+// ============================================================
+//  QUESTION BUILDERS
+// ============================================================
+
+function buildCombinationQuestions(){
+  // Each question: two 2x2 patterns (T=top, B=bottom, L=left, R=right quadrant filled or not)
+  // quadrant index: 0=TL,1=TR,2=BL,3=BR
+  const combos = [
+    {a:[1,0,0,0], b:[0,1,0,0], ans:[1,1,0,0]},
+    {a:[0,0,1,0], b:[0,0,0,1], ans:[0,0,1,1]},
+    {a:[1,0,1,0], b:[0,1,0,1], ans:[1,1,1,1]},
+    {a:[1,1,0,0], b:[0,0,1,1], ans:[1,1,1,1]},
+    {a:[1,0,0,1], b:[0,1,1,0], ans:[1,1,1,1]},
+    {a:[0,1,0,0], b:[1,0,0,0], ans:[1,1,0,0]},
+    {a:[0,0,0,1], b:[1,0,0,0], ans:[1,0,0,1]},
+    {a:[1,1,0,0], b:[0,0,0,1], ans:[1,1,0,1]},
+  ];
+  return combos.map((c,i)=>({id:i, a:c.a, b:c.b, ans:c.ans}));
+}
+
+function buildGridCopyQuestions(){
+  const patterns = [
+    [1,0,1, 0,1,0, 1,0,1],
+    [1,1,0, 0,1,0, 0,1,1],
+    [0,1,0, 1,1,1, 0,1,0],
+    [1,0,0, 0,1,0, 0,0,1],
+    [1,1,1, 1,0,1, 1,1,1],
+    [0,0,1, 0,1,0, 1,0,0],
+    [1,0,1, 0,0,0, 1,0,1],
+    [0,1,1, 1,1,0, 0,1,1],
+  ];
+  return patterns.map((p,i)=>({id:i, pattern:p}));
+}
+
+function buildMirrorQuestions(){
+  const patterns = [
+    [1,0,0, 0,1,0, 1,0,1],
+    [1,1,0, 0,0,1, 1,0,0],
+    [0,0,1, 1,1,0, 0,0,1],
+    [1,0,1, 0,1,0, 0,0,0],
+    [0,1,1, 1,0,0, 0,1,0],
+    [1,0,0, 0,1,1, 1,0,1],
+    [0,0,0, 1,0,1, 0,1,0],
+    [1,1,0, 0,0,0, 1,1,1],
+  ];
+  return patterns.map((p,i)=>{
+    // mirror: col 0↔2
+    const mirrored = [];
+    for(let r=0;r<3;r++) for(let c=0;c<3;c++) mirrored[r*3+c]=p[r*3+(2-c)];
+    return {id:i, pattern:p, ans:mirrored};
+  });
+}
+
+function buildCountingQuestions(){
+  const pairs = [
+    [3,1],[2,2],[4,1],[3,3],[5,2],[2,4],[6,3],[4,4],[5,5],[3,6]
+  ];
+  return pairs.map((p,i)=>({id:i, a:p[0], b:p[1], ans:p[0]+p[1]}));
+}
+
+function buildMissingPartQuestions(){
+  const qs = [
+    {q:'2, 4, 6, ?, 10', opts:['7','8','9','11'], ans:'8'},
+    {q:'1, 3, 5, 7, ?', opts:['8','9','10','11'], ans:'9'},
+    {q:'10, 8, 6, ?, 2', opts:['3','4','5','6'], ans:'4'},
+    {q:'5, 10, 15, ?, 25', opts:['18','19','20','21'], ans:'20'},
+    {q:'1, 4, 9, 16, ?', opts:['20','22','25','26'], ans:'25'},
+    {q:'2, 4, 8, 16, ?', opts:['24','30','32','34'], ans:'32'},
+    {q:'3, 6, 9, 12, ?', opts:['13','14','15','16'], ans:'15'},
+    {q:'100, 90, 80, ?, 60', opts:['65','70','75','85'], ans:'70'},
+  ];
+  return qs.map((q,i)=>({...q, id:i}));
+}
+
+function buildDotConnectQuestions(){
+  // Which number comes next in a connect-the-dots sequence?
+  const qs = [
+    {q:'Jika titik 1→2→3→4→5, angka berapakah yang datang setelah titik ke-4?', opts:['3','5','6','7'], ans:'5'},
+    {q:'Membentuk angka berapa jika hubungkan: 1→2→3→4→5→6→7→8→9?', opts:['Bintang','Hati','Angka 9','Lingkaran'], ans:'Angka 9'},
+    {q:'Titik-titik 1,2,3 ada di pojok kiri atas, kanan atas, dan bawah tengah. Bentuk apa yang terbentuk?', opts:['Persegi','Segitiga','Lingkaran','Bintang'], ans:'Segitiga'},
+    {q:'Berapa titik yang diperlukan untuk membentuk segilima (pentagon)?', opts:['4','5','6','7'], ans:'5'},
+    {q:'Hubungkan 4 titik di pojok → bentuk apa?', opts:['Segitiga','Persegi','Bintang','Lingkaran'], ans:'Persegi'},
+    {q:'Sebuah bintang memiliki berapa titik sudut?', opts:['4','5','6','8'], ans:'5'},
+    {q:'Jika menghubungkan titik secara acak tanpa aturan, hasilnya...', opts:['Selalu rapi','Tidak beraturan','Selalu bulat','Selalu kotak'], ans:'Tidak beraturan'},
+    {q:'Segienam (hexagon) memiliki berapa titik?', opts:['5','6','7','8'], ans:'6'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildPositionQuestions(){
+  const qs = [
+    {q:'🟦 berada di atas ⬛. Di manakah 🟦?', opts:['Atas','Bawah','Kiri','Kanan'], ans:'Atas'},
+    {q:'⭐ berada di sebelah kiri 🔴. Di manakah ⭐?', opts:['Atas','Bawah','Kiri','Kanan'], ans:'Kiri'},
+    {q:'🐱 berada di TENGAH kotak. Di manakah 🐱?', opts:['Sudut','Pinggir','Tengah','Luar'], ans:'Tengah'},
+    {q:'🍎 di bawah 🍊. Di manakah 🍎?', opts:['Atas','Bawah','Kiri','Tengah'], ans:'Bawah'},
+    {q:'Jika A ada di kiri B, maka B ada di ... A.', opts:['Kiri','Kanan','Atas','Bawah'], ans:'Kanan'},
+    {q:'🐶 ada di pojok kanan atas. Posisinya adalah...', opts:['Bawah kiri','Atas kanan','Tengah','Bawah kanan'], ans:'Atas kanan'},
+    {q:'Di antara 🟥 dan 🟦, ada 🟩. 🟩 ada di posisi...', opts:['Kiri','Kanan','Tengah','Atas'], ans:'Tengah'},
+    {q:'Benda di koordinat (0,0) ada di posisi...', opts:['Atas kanan','Bawah kiri','Tengah','Pojok'], ans:'Pojok'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildRulesQuestions(){
+  const qs = [
+    {q:'Aturan: Jika angka > 5 maka tulis "BESAR". Angka 7 termasuk...', opts:['KECIL','BESAR','SAMA','TIDAK TAHU'], ans:'BESAR'},
+    {q:'Aturan: Jika angka genap tulis ✅, jika ganjil tulis ❌. Angka 4 = ?', opts:['✅','❌','0','?'], ans:'✅'},
+    {q:'Aturan: Setiap langkah ke kanan tambah 3. Mulai dari 1, langkah ke-3 = ?', opts:['7','8','9','10'], ans:'7'},
+    {q:'Aturan: Merah=1, Biru=2, Hijau=3. Merah+Hijau = ?', opts:['2','3','4','5'], ans:'4'},
+    {q:'Aturan: Kalikan dengan 2 setiap langkah. Mulai 1: langkah ke-4 = ?', opts:['6','8','10','12'], ans:'8'},
+    {q:'Aturan: Jika ada ★ maka skip satu langkah. Ada 2★ dalam 10 langkah, berarti langkah efektif = ?', opts:['8','9','10','12'], ans:'8'},
+    {q:'Aturan: ↑=naik 1, →=kanan 1. Setelah ↑↑→→, posisi (x,y) dari (0,0) = ?', opts:['(2,2)','(1,1)','(2,1)','(1,2)'], ans:'(2,2)'},
+    {q:'Aturan: Jika kotak kosong, isi dengan 0. Jika berisi, isi dengan 1. [kosong, isi, kosong] = ?', opts:['010','001','100','101'], ans:'010'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildReasoningQuestions(){
+  const qs = [
+    {q:'Semua kucing adalah hewan. Tom adalah kucing. Maka Tom adalah...', opts:['Manusia','Hewan','Robot','Tanaman'], ans:'Hewan'},
+    {q:'Ada 5 apel. Dimakan 2. Sisa...', opts:['2','3','4','5'], ans:'3'},
+    {q:'Jika A > B dan B > C, maka A ... C', opts:['<','=','>','tidak tahu'], ans:'>'},
+    {q:'Benda yang lebih berat dari batu adalah... (pilih logis)', opts:['Kapas','Bulu','Besi','Kertas'], ans:'Besi'},
+    {q:'Setiap hari Senin ada upacara. Hari ini Senin. Maka...', opts:['Tidak ada upacara','Ada upacara','Mungkin ada upacara','Hari libur'], ans:'Ada upacara'},
+    {q:'Jika 2 + 2 = 4 dan 4 + 4 = 8, maka 8 + 8 = ?', opts:['14','15','16','17'], ans:'16'},
+    {q:'Pola: ○●○●○●... Setelah ●, muncul...', opts:['●','○','★','?'], ans:'○'},
+    {q:'Ada 3 kotak merah dan 2 kotak biru. Total kotak = ?', opts:['4','5','6','7'], ans:'5'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildSequenceQuestions(){
+  const seqs = [
+    {seq:[2,4,6,8], ans:10, opts:[9,10,11,12]},
+    {seq:[1,3,5,7], ans:9, opts:[8,9,10,11]},
+    {seq:[10,20,30,40], ans:50, opts:[45,50,55,60]},
+    {seq:[1,2,4,8], ans:16, opts:[12,14,16,18]},
+    {seq:[5,10,15,20], ans:25, opts:[22,23,24,25]},
+    {seq:[100,90,80,70], ans:60, opts:[55,60,65,70]},
+    {seq:[3,6,9,12], ans:15, opts:[13,14,15,16]},
+    {seq:[1,1,2,3,5], ans:8, opts:[6,7,8,9]},
+  ];
+  return seqs.map((s,i)=>({...s, id:i}));
+}
+
+function buildMathQuestions(){
+  const qs = [
+    {q:'15 + 27 = ?', ans:42, opts:[40,41,42,43]},
+    {q:'56 - 18 = ?', ans:38, opts:[36,37,38,39]},
+    {q:'6 × 7 = ?', ans:42, opts:[40,41,42,43]},
+    {q:'48 ÷ 6 = ?', ans:8, opts:[6,7,8,9]},
+    {q:'23 + 45 = ?', ans:68, opts:[66,67,68,69]},
+    {q:'9 × 9 = ?', ans:81, opts:[79,80,81,82]},
+    {q:'100 - 37 = ?', ans:63, opts:[61,62,63,64]},
+    {q:'72 ÷ 8 = ?', ans:9, opts:[7,8,9,10]},
+    {q:'13 × 4 = ?', ans:52, opts:[50,51,52,53]},
+    {q:'125 + 75 = ?', ans:200, opts:[195,198,200,205]},
+  ];
+  return qs.map((q,i)=>({...q,id:i, opts:shuffle([...q.opts]).slice(0,4)}));
+}
+
+function buildOrderingQuestions(){
+  const sets = [
+    {nums:[5,2,8,1,4], ans:'1, 2, 4, 5, 8'},
+    {nums:[10,3,7,1,9], ans:'1, 3, 7, 9, 10'},
+    {nums:[15,5,25,10,20], ans:'5, 10, 15, 20, 25'},
+    {nums:[8,4,12,2,6], ans:'2, 4, 6, 8, 12'},
+    {nums:[100,50,75,25,125], ans:'25, 50, 75, 100, 125'},
+    {nums:[9,3,6,1,7], ans:'1, 3, 6, 7, 9'},
+    {nums:[11,22,33,11,44], ans:'11, 11, 22, 33, 44'},
+    {nums:[7,14,21,1,28], ans:'1, 7, 14, 21, 28'},
+  ];
+  return sets.map((s,i)=>({
+    id:i,
+    nums:s.nums,
+    ans:s.ans,
+    opts: generateOrderingOpts(s.nums, s.ans)
+  }));
+}
+
+function generateOrderingOpts(nums, correctAns){
+  const shuffled1 = [...nums].sort(()=>Math.random()-0.5).join(', ');
+  const shuffled2 = [...nums].sort(()=>Math.random()-0.5).join(', ');
+  const opts = new Set([correctAns]);
+  opts.add(shuffled1); opts.add(shuffled2);
+  while(opts.size<4){
+    const r=[...nums].sort(()=>Math.random()-0.5).join(', ');
+    opts.add(r);
+  }
+  return shuffle([...opts]).slice(0,4);
+}
+
+function buildIdenticalQuestions(){
+  const qs = [
+    {q:'Dalam kumpulan [🌳🌲🌳🌳🌲🌳🌲🌳], berapa banyak 🌳?', opts:['3','4','5','6'], ans:'5'},
+    {q:'[⭐☆⭐⭐☆⭐☆⭐], berapa ⭐?', opts:['4','5','6','7'], ans:'5'},
+    {q:'[🐱🐶🐱🐶🐱🐶🐱], berapa 🐱?', opts:['3','4','5','6'], ans:'4'},
+    {q:'[🔴🔵🔴🔵🔴🔵🔴🔵🔴], berapa 🔴?', opts:['4','5','6','7'], ans:'5'},
+    {q:'[▲△▲△▲△▲], berapa ▲ (besar)?', opts:['3','4','5','6'], ans:'4'},
+    {q:'[🍎🍊🍎🍊🍎🍊🍎🍎], berapa 🍎?', opts:['3','4','5','6'], ans:'5'},
+    {q:'[■□■□■□■□■], berapa ■?', opts:['4','5','6','7'], ans:'5'},
+    {q:'[★☆★☆★★☆★], berapa ★?', opts:['4','5','6','7'], ans:'5'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildPatternQuestions(){
+  const qs = [
+    {q:'🔴🔵🔴🔵🔴... selanjutnya?', opts:['🔴','🔵','🟢','🟡'], ans:'🔵'},
+    {q:'▲■▲■▲... selanjutnya?', opts:['▲','■','●','★'], ans:'■'},
+    {q:'1🍎2🍎3🍎... selanjutnya?', opts:['3🍎','4🍎','4🍊','3🍊'], ans:'4🍎'},
+    {q:'🌙⭐🌙⭐🌙... selanjutnya?', opts:['🌙','⭐','☀️','🌟'], ans:'⭐'},
+    {q:'AB AB AB... selanjutnya?', opts:['A','B','AB','BA'], ans:'AB'},
+    {q:'1,2,3,1,2,3,1... selanjutnya?', opts:['1','2','3','4'], ans:'2'},
+    {q:'🐱🐶🐱🐶... selanjutnya?', opts:['🐱','🐶','🐰','🐸'], ans:'🐱'},
+    {q:'red,blue,green,red,blue... selanjutnya?', opts:['red','blue','green','yellow'], ans:'green'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildTracingQuestions(){
+  // Maze-like: define correct path as sequence of grid positions
+  const mazes = [
+    {size:4, start:[0,0], end:[3,3], path:[[0,0],[0,1],[0,2],[1,2],[2,2],[2,3],[3,3]]},
+    {size:4, start:[0,0], end:[3,3], path:[[0,0],[1,0],[2,0],[2,1],[2,2],[3,2],[3,3]]},
+    {size:4, start:[0,3], end:[3,0], path:[[0,3],[0,2],[1,2],[1,1],[2,1],[2,0],[3,0]]},
+    {size:3, start:[0,0], end:[2,2], path:[[0,0],[0,1],[0,2],[1,2],[2,2]]},
+    {size:3, start:[0,0], end:[2,2], path:[[0,0],[1,0],[1,1],[1,2],[2,2]]},
+    {size:4, start:[0,0], end:[3,3], path:[[0,0],[0,1],[1,1],[1,2],[2,2],[2,3],[3,3]]},
+  ];
+  return mazes.map((m,i)=>({...m,id:i}));
+}
+
+function buildDifferencesQuestions(){
+  const qs = [
+    {q:'Gambar A: 🔴🔵🟢 | Gambar B: 🔴🟡🟢\nAda berapa perbedaan?', opts:['1','2','3','4'], ans:'1'},
+    {q:'Gambar A: ★★★☆ | Gambar B: ★☆★☆\nAda berapa perbedaan?', opts:['1','2','3','4'], ans:'1'},
+    {q:'Pola A: ▲▲■■ | Pola B: ▲■▲■\nAda berapa perbedaan posisi?', opts:['1','2','3','4'], ans:'2'},
+    {q:'Baris A: 1,2,3,4 | Baris B: 1,2,4,4\nAda berapa angka berbeda?', opts:['1','2','3','4'], ans:'1'},
+    {q:'Set A: {🐱,🐶,🐰} | Set B: {🐱,🐸,🐰}\nAda berapa beda?', opts:['1','2','3','4'], ans:'1'},
+    {q:'Kode A: 1010 | Kode B: 1110\nBerapa bit berbeda?', opts:['1','2','3','4'], ans:'1'},
+    {q:'Warna A: merah,biru,hijau | B: merah,kuning,hijau,ungu\nAda berapa perbedaan?', opts:['1','2','3','4'], ans:'2'},
+    {q:'Grid A: 3 baris 3 kolom | Grid B: 3 baris 4 kolom\nBerapa kolom bedanya?', opts:['1','2','3','4'], ans:'1'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildCoordinateQuestions(){
+  // Grid 6x6 (A-F, 1-6), place a shape and ask for its coord
+  const items = [
+    {shape:'⭐', x:3, y:'C', ans:'(3,C)'},
+    {shape:'🔴', x:1, y:'F', ans:'(1,F)'},
+    {shape:'■', x:6, y:'E', ans:'(6,E)'},
+    {shape:'▲', x:4, y:'B', ans:'(4,B)'},
+    {shape:'●', x:2, y:'D', ans:'(2,D)'},
+    {shape:'★', x:5, y:'A', ans:'(5,A)'},
+    {shape:'♦', x:3, y:'F', ans:'(3,F)'},
+    {shape:'🔵', x:6, y:'C', ans:'(6,C)'},
+  ];
+  return items.map((it,i)=>({
+    id:i, ...it,
+    opts: generateCoordOpts(it.ans)
+  }));
+}
+
+function generateCoordOpts(correct){
+  const cols=['A','B','C','D','E','F'];
+  const opts=new Set([correct]);
+  while(opts.size<4){
+    const x=Math.ceil(Math.random()*6);
+    const y=cols[Math.floor(Math.random()*6)];
+    opts.add(`(${x},${y})`);
+  }
+  return shuffle([...opts]).slice(0,4);
+}
+
+function buildFindCoordQuestions(){
+  const coords=[
+    {x:1,y:0,label:'(1,A)'},{x:3,y:2,label:'(3,C)'},{x:5,y:4,label:'(5,E)'},
+    {x:0,y:1,label:'(1,B)'},{x:4,y:3,label:'(4,D)'},{x:2,y:5,label:'(2,F)'},
+    {x:5,y:0,label:'(5,A)'},{x:0,y:5,label:'(1,F)'},
+  ];
+  return coords.map((c,i)=>({...c,id:i}));
+}
+
+function buildRuleReadingQuestions(){
+  const qs=[
+    {rule:'Aturan: Jika angka habis dibagi 2 → GENAP, lainnya → GANJIL',q:'Angka 14 adalah?',opts:['GENAP','GANJIL','PRIMA','NOL'],ans:'GENAP'},
+    {rule:'Aturan: ● = 3 poin, ○ = 1 poin',q:'●●○ berapa poin?',opts:['5','6','7','8'],ans:'7'},
+    {rule:'Aturan: Setiap → tambah 1, setiap ↑ tambah 10',q:'→→↑ dari 0 = ?',opts:['12','11','13','22'],ans:'12'},
+    {rule:'Aturan: Merah > Biru > Hijau (nilai)',q:'Hijau + Merah vs Biru + Biru: mana lebih besar?',opts:['Hijau+Merah','Biru+Biru','Sama','Tidak bisa tahu'],ans:'Biru+Biru'},
+    {rule:'Aturan: A=1,B=2,C=3,...',q:'B + C = ?',opts:['4','5','6','7'],ans:'5'},
+    {rule:'Aturan: Jika > 10 → besar; jika ≤ 10 → kecil',q:'Angka 10 adalah?',opts:['Besar','Kecil','Sama','Tidak ada'],ans:'Kecil'},
+    {rule:'Aturan: Kotak merah = langkah berbahaya (skip)',q:'Dari 5 langkah ada 2 kotak merah, langkah aman = ?',opts:['2','3','4','5'],ans:'3'},
+    {rule:'Aturan: ★ = bonus 5, ☆ = normal',q:'☆☆★☆ = berapa langkah efektif (★ dihitung 5)?',opts:['7','8','9','10'],ans:'8'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildAlgorithmQuestions(){
+  // Ball starts at position, follow arrows, where does it end?
+  const qs=[
+    {q:'Bola mulai di (1,1). Algoritma: → → ↓ ↓. Bola berhenti di?', opts:['(3,3)','(2,3)','(3,2)','(1,1)'], ans:'(3,3)'},
+    {q:'Bola mulai di (0,0). Algoritma: → ↓ → ↓. Bola berhenti di?', opts:['(1,2)','(2,2)','(2,1)','(1,1)'], ans:'(2,2)'},
+    {q:'Bola mulai di (3,0). Algoritma: ← ← ↓ ↓ ↓. Bola berhenti di?', opts:['(1,3)','(0,3)','(1,2)','(2,3)'], ans:'(1,3)'},
+    {q:'Bola mulai di (0,3). Algoritma: → → → ↑ ↑. Bola berhenti di?', opts:['(3,1)','(2,1)','(3,2)','(3,3)'], ans:'(3,1)'},
+    {q:'Mulai (2,2). ↑ ↑ → ↓. Berhenti di?', opts:['(2,0)','(3,1)','(3,0)','(2,1)'], ans:'(3,1)'},
+    {q:'Mulai (0,0). → → → →. Berhenti di kolom ke?', opts:['2','3','4','5'], ans:'4'},
+    {q:'Mulai (0,4). ↑ ↑ ↑ ↑. Berhenti di baris ke?', opts:['0','1','2','3'], ans:'0'},
+    {q:'Mulai (2,2). ← ↓ → ↑. Berhenti di?', opts:['(2,2)','(3,3)','(1,1)','(2,3)'], ans:'(2,2)'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildWriteAlgorithmQuestions(){
+  const qs=[
+    {q:'Dari pojok kiri atas ke pojok kanan bawah (2 langkah kanan, 2 langkah bawah). Pilih algoritma!',
+     opts:['→→↓↓','↓↓→→','→↓→↓','→→→→'], ans:'→→↓↓'},
+    {q:'Dari (0,0) ke (3,0): algoritma?', opts:['→→→','↓↓↓','←←←','↑↑↑'], ans:'→→→'},
+    {q:'Dari (0,0) ke (0,3): algoritma?', opts:['→→→','↓↓↓','←←←','↑↑↑'], ans:'↓↓↓'},
+    {q:'Dari (0,0) ke (2,2) via jalur L: 2 kanan lalu 2 bawah?', opts:['→→↓↓','↓↓→→','→↓→↓','↑↑→→'], ans:'→→↓↓'},
+    {q:'Naik 3 langkah = ?', opts:['↑↑↑','↓↓↓','→→→','←←←'], ans:'↑↑↑'},
+    {q:'Kiri 2 lalu bawah 1 = ?', opts:['←←↓','↓←←','→→↑','←↓←'], ans:'←←↓'},
+    {q:'Satu putaran kotak 2x2: kanan, bawah, kiri, atas = ?', opts:['→↓←↑','↓→↑←','←↓→↑','→↑←↓'], ans:'→↓←↑'},
+    {q:'Diagonal tidak bisa langsung. Dari (0,0) ke (2,2), pilih urutan benar:', opts:['→↓→↓','→→↓↓','↓↓→→','Semua benar'], ans:'Semua benar'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildLoopingQuestions(){
+  const qs=[
+    {q:'→→→→→ dapat diringkas menjadi loop...', opts:['3→','4→','5→','6→'], ans:'5→'},
+    {q:'↓↓↓ dapat diringkas menjadi...', opts:['2↓','3↓','4↓','1↓'], ans:'3↓'},
+    {q:'→→↓↓ artinya berapa kali → dan berapa kali ↓?', opts:['2→ 2↓','3→ 1↓','1→ 3↓','2→ 3↓'], ans:'2→ 2↓'},
+    {q:'Loop "4↑" artinya gerakan...', opts:['↑↑↑↑','↑↑↑','↑↑↑↑↑','↑'], ans:'↑↑↑↑'},
+    {q:'←←←←←←← diringkas menjadi...', opts:['5←','6←','7←','8←'], ans:'7←'},
+    {q:'"3→ 2↓ 3←" = berapa total langkah?', opts:['6','7','8','9'], ans:'8'},
+    {q:'Loop terpendek untuk →→→→→→ adalah...', opts:['2→','6→','3→','1→'], ans:'6→'},
+    {q:'↑↑↑→→↓↓↓ = ?', opts:['3↑ 2→ 3↓','2↑ 3→ 2↓','3↑ 3→ 2↓','3↑ 2→ 2↓'], ans:'3↑ 2→ 3↓'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildLoopPracticeQuestions(){
+  const qs=[
+    {q:'Bola harus ke kanan 4x lalu bawah 3x. Loop yang tepat?', opts:['4→ 3↓','3→ 4↓','4↓ 3→','3↓ 4→'], ans:'4→ 3↓'},
+    {q:'"2← 5↑" artinya...?', opts:['Kiri 2x lalu atas 5x','Atas 2x lalu kiri 5x','Kiri 5x lalu atas 2x','Atas 5x lalu kiri 2x'], ans:'Kiri 2x lalu atas 5x'},
+    {q:'Jika loop "N→" dan N=6, berapa langkah kanan?', opts:['4','5','6','7'], ans:'6'},
+    {q:'→↑→↑→↑ dipadatkan menjadi...', opts:['3→↑','6→','→↑ ×3','3(→↑)'], ans:'3(→↑)'},
+    {q:'Algoritma: 2→ 1↓ 2→ 1↓. Berapa total langkah?', opts:['4','5','6','8'], ans:'6'},
+    {q:'"5(↑→)" berarti?', opts:['Atas 5x lalu kanan 5x','Atas-kanan diulang 5x','Kanan 5x lalu atas 5x','Atas 5x'], ans:'Atas-kanan diulang 5x'},
+    {q:'Loop mana yang paling efisien untuk ↓↓↓↓↓↓?', opts:['6↓','3↓3↓','↓×6','2(3↓)'], ans:'6↓'},
+    {q:'Dalam 10 langkah, 5x kanan dan 5x bawah. Loop = ?', opts:['5→ 5↓','5(→↓)','10langkah','→5 ↓5'], ans:'5→ 5↓'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildProgramFlowQuestions(){
+  const qs=[
+    {q:'x = 5\nx = x + 3\nNilai x sekarang?', opts:['5','7','8','10'], ans:'8'},
+    {q:'a = 10\nb = 4\nhasil = a - b\nhasil = ?', opts:['4','6','14','40'], ans:'6'},
+    {q:'n = 2\nn = n × 3\nn = n + 1\nn = ?', opts:['6','7','8','9'], ans:'7'},
+    {q:'x = 100\nx = x ÷ 10\nx = x - 2\nx = ?', opts:['8','9','10','11'], ans:'8'},
+    {q:'a = 3, b = 4\nc = a + b\nc = c × 2\nc = ?', opts:['12','14','16','18'], ans:'14'},
+    {q:'x = 1\nULANG 4x: x = x + x\nx = ?', opts:['8','12','16','20'], ans:'16'},
+    {q:'total = 0\nULANG 5x: total = total + 3\ntotal = ?', opts:['10','12','15','18'], ans:'15'},
+    {q:'x = 20\ny = 5\nz = x ÷ y + y\nz = ?', opts:['8','9','10','11'], ans:'9'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildCodeAlgoQuestions(){
+  const qs=[
+    {q:`MULAI
+  gerak(→)
+  gerak(→)
+  gerak(↓)
+SELESAI
+
+Bola mulai (0,0). Berhenti di?`, opts:['(2,1)','(1,2)','(2,0)','(0,2)'], ans:'(2,1)'},
+    {q:`ULANG 3x:
+  gerak(→)
+Bola mulai (0,0). Berhenti di?`, opts:['(1,0)','(2,0)','(3,0)','(4,0)'], ans:'(3,0)'},
+    {q:`x = 0
+ULANG 4x:
+  x = x + 2
+OUTPUT x`, opts:['4','6','8','10'], ans:'8'},
+    {q:`a = 5
+b = 3
+JIKA a > b:
+  print("A menang")
+JIKA TIDAK:
+  print("B menang")
+Output?`, opts:['A menang','B menang','Error','Tidak ada output'], ans:'A menang'},
+    {q:`n = 1
+ULANG 5x:
+  n = n × 2
+n = ?`, opts:['16','32','64','128'], ans:'32'},
+    {q:`x = 10
+gerak(←, x)
+Jika x = 10, berapa langkah ke kiri?`, opts:['5','8','10','12'], ans:'10'},
+    {q:`total = 0
+UNTUK i dari 1 sampai 5:
+  total = total + i
+total = ?`, opts:['10','12','15','20'], ans:'15'},
+    {q:`FUNGSI tambah(a, b):
+  kembalikan a + b
+hasil = tambah(7, 8)
+hasil = ?`, opts:['14','15','16','17'], ans:'15'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+function buildCodeConditionQuestions(){
+  const qs=[
+    {q:`nilai = 75
+JIKA nilai >= 90: print("A")
+JIKA nilai >= 75: print("B")
+JIKA TIDAK: print("C")
+Output?`, opts:['A','B','C','B dan C'], ans:'B'},
+    {q:`x = 4
+JIKA x % 2 == 0:
+  print("Genap")
+JIKA TIDAK:
+  print("Ganjil")
+Output?`, opts:['Genap','Ganjil','Error','Keduanya'], ans:'Genap'},
+    {q:`cuaca = "hujan"
+JIKA cuaca == "cerah": print("Piknik!")
+JIKA cuaca == "hujan": print("Bawa payung!")
+JIKA TIDAK: print("Santai")
+Output?`, opts:['Piknik!','Bawa payung!','Santai','Tidak ada output'], ans:'Bawa payung!'},
+    {q:`a = 10, b = 20
+JIKA a > b: besar = a
+JIKA TIDAK: besar = b
+besar = ?`, opts:['10','20','0','30'], ans:'20'},
+    {q:`n = 7
+JIKA n > 5 DAN n < 10:
+  print("Antara 5 dan 10")
+JIKA TIDAK:
+  print("Di luar range")
+Output?`, opts:['Antara 5 dan 10','Di luar range','Error','7'], ans:'Antara 5 dan 10'},
+    {q:`lampu = "merah"
+JIKA lampu == "hijau": gerak("jalan")
+JIKA lampu == "merah": gerak("berhenti")
+JIKA lampu == "kuning": gerak("hati-hati")
+Output?`, opts:['jalan','berhenti','hati-hati','Tidak ada'], ans:'berhenti'},
+    {q:`x = 0
+ULANG 10x:
+  JIKA x < 5: x = x + 1
+  JIKA TIDAK: x = x - 1
+x akhir = ?`, opts:['4','5','6','10'], ans:'5'},
+    {q:`skor = 85
+JIKA skor >= 90: hasil = "Sempurna"
+JIKA skor >= 70: hasil = "Bagus"
+JIKA skor >= 50: hasil = "Cukup"
+JIKA TIDAK: hasil = "Kurang"
+hasil = ?`, opts:['Sempurna','Bagus','Cukup','Kurang'], ans:'Bagus'},
+  ];
+  return qs.map((q,i)=>({...q,id:i}));
+}
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+
+// ============================================================
+//  UI – HOME
+// ============================================================
+function renderHome(){
+  document.getElementById('homeScreen').style.display='block';
+  document.getElementById('gameScreen').style.display='none';
+  const grid = document.getElementById('taskGrid');
+  grid.innerHTML = TASKS.map(t=>`
+    <div class="task-card ${completedTasks.has(t.id)?'done':''}" onclick="startTask(${t.id})">
+      <div class="num">${t.id}</div>
+      <div class="name">${t.name}</div>
+      ${completedTasks.has(t.id)?'<div class="check">✅</div>':''}
+    </div>
+  `).join('');
+  updateHeader();
+}
+
+function updateHeader(){
+  const pct = Math.round(completedTasks.size/TASKS.length*100);
+  document.getElementById('headerProgress').style.width=pct+'%';
+  totalScore = Object.values(taskScores).reduce((a,b)=>a+b,0);
+  document.getElementById('totalScore').textContent=totalScore;
+}
+
+function goHome(){ renderHome(); }
+
+// ============================================================
+//  UI – GAME
+// ============================================================
+let currentTask=null, currentQIdx=0, answered=false, taskPoints=0;
+
+function startTask(taskId){
+  currentTask = TASKS.find(t=>t.id===taskId);
+  currentQIdx = 0; answered=false; taskPoints=0;
+  document.getElementById('homeScreen').style.display='none';
+  document.getElementById('gameScreen').style.display='block';
+  document.getElementById('taskNum').textContent=`Task ${currentTask.id}`;
+  document.getElementById('taskTitle').textContent=currentTask.name;
+  document.getElementById('taskInstruction').textContent=currentTask.instruction;
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const q = currentTask.questions[currentQIdx];
+  const total = currentTask.questions.length;
+  answered=false;
+
+  // dots
+  let dots='';
+  for(let i=0;i<total;i++){
+    const cls = i<currentQIdx?'done':i===currentQIdx?'active':'';
+    dots+=`<div class="q-dot ${cls}"></div>`;
+  }
+  document.getElementById('qDots').innerHTML=dots;
+  document.getElementById('qLabel').textContent=`${currentQIdx+1} / ${total}`;
+
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('checkBtn').style.display='inline-block';
+  document.getElementById('nextBtn').style.display='none';
+
+  const content=document.getElementById('taskContent');
+  const type = currentTask.type;
+
+  if(type==='combination') content.innerHTML = renderCombination(q);
+  else if(type==='grid_copy') content.innerHTML = renderGridCopy(q);
+  else if(type==='mirror') content.innerHTML = renderMirror(q);
+  else if(type==='counting') content.innerHTML = renderCounting(q);
+  else if(type==='tracing') content.innerHTML = renderTracing(q);
+  else if(type==='find_coord') content.innerHTML = renderFindCoord(q);
+  else if(type==='program_flow'||type==='code_algo'||type==='code_condition') content.innerHTML = renderCode(q);
+  else content.innerHTML = renderChoice(q);
+}
+
+// ---- COMBINATION ----
+function renderCombination(q){
+  const labels=['TL','TR','BL','BR'];
+  const diags={0:'NW',1:'NE',2:'SW',3:'SE'};
+  function drawBox(filled, highlight=false, clickable=false){
+    const id = clickable?`comb-${Math.random().toString(36).slice(2)}`:'';
+    const style=`width:70px;height:70px;border:3px solid #374151;position:relative;border-radius:6px;background:${highlight?'#FFF3E0':'white'};cursor:${clickable?'pointer':'default'}`;
+    const diag = `<svg style="position:absolute;top:0;left:0;width:100%;height:100%" viewBox="0 0 70 70">
+      <line x1="0" y1="0" x2="70" y2="70" stroke="#374151" stroke-width="2"/>
+      <line x1="70" y1="0" x2="0" y2="70" stroke="#374151" stroke-width="2"/>
+      ${filled[0]?`<polygon points="0,0 35,35 0,70" fill="#1C1917"/>`:''}
+      ${filled[1]?`<polygon points="70,0 35,35 70,70" fill="#1C1917"/>`:''}
+      ${filled[2]?`<polygon points="0,70 35,35 70,70" fill="#1C1917"/>`:''}
+      ${filled[3]?`<polygon points="0,0 70,0 35,35" fill="#1C1917"/>`:''}
+    </svg>`;
+    if(!clickable) return `<div style="${style}">${diag}</div>`;
+    return `<div style="${style}" id="${id}" onclick="toggleCombCell(this,${labels.indexOf})">${diag}</div>`;
+  }
+
+  // Generate answer options
+  const ansOpts=[q.ans];
+  while(ansOpts.length<4){
+    const fake=[0,1,2,3].map(()=>Math.random()>0.5?1:0);
+    if(JSON.stringify(fake)!==JSON.stringify(q.ans)) ansOpts.push(fake);
+  }
+  shuffle(ansOpts);
+
+  let html=`<div style="display:flex;align-items:center;gap:16px;justify-content:center;margin-bottom:24px;flex-wrap:wrap">`;
+  html+=`<div>${drawBox(q.a)}</div><div style="font-size:2rem;font-weight:800">+</div>`;
+  html+=`<div>${drawBox(q.b)}</div><div style="font-size:2rem;font-weight:800">=</div>`;
+  html+=`<div style="width:70px;height:70px;border:3px dashed var(--orange);border-radius:6px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:2rem">?</div>`;
+  html+=`</div>`;
+  html+=`<div style="font-weight:700;color:var(--teal);margin-bottom:12px;text-align:center">Pilih hasil kombinasi yang benar:</div>`;
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;justify-items:center">`;
+  ansOpts.forEach((opt,i)=>{
+    const isAns=JSON.stringify(opt)===JSON.stringify(q.ans);
+    html+=`<div class="choice-btn" id="comb-opt-${i}" data-ans="${isAns}" onclick="selectCombOpt(this)" style="padding:12px;display:flex;justify-content:center">${drawBox(opt)}</div>`;
+  });
+  html+=`</div>`;
+  return html;
+}
+
+function selectCombOpt(el){
+  if(answered) return;
+  document.querySelectorAll('[id^="comb-opt-"]').forEach(e=>e.classList.remove('selected-correct','selected-wrong','reveal-correct'));
+  el.classList.add('selected');
+  el.dataset.selected='true';
+}
+
+// ---- GRID COPY ----
+function renderGridCopy(q){
+  let html=`<div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap">`;
+  // Source
+  html+=`<div><div style="font-weight:700;color:var(--teal);margin-bottom:8px;text-align:center">Pola asli:</div><div class="sym-grid" style="grid-template-columns:repeat(3,52px)">`;
+  q.pattern.forEach(v=>{ html+=`<div class="sym-cell" style="background:${v?'var(--teal)':'#F9FAFB'};color:white">${v?'●':''}</div>`; });
+  html+=`</div></div>`;
+  // Target
+  html+=`<div><div style="font-weight:700;color:var(--teal);margin-bottom:8px;text-align:center">Salin di sini:</div><div class="sym-grid" style="grid-template-columns:repeat(3,52px)" id="copyGrid">`;
+  q.pattern.forEach((_,idx)=>{ html+=`<div class="sym-cell" id="gc-${idx}" onclick="toggleCell(this,${idx},'gc')"></div>`; });
+  html+=`</div></div>`;
+  html+=`</div>`;
+  return html;
+}
+
+function toggleCell(el,idx,prefix){
+  if(answered) return;
+  el.classList.toggle('selected');
+}
+
+// ---- MIRROR ----
+function renderMirror(q){
+  let html=`<div style="display:flex;gap:32px;justify-content:center;flex-wrap:wrap">`;
+  html+=`<div><div style="font-weight:700;color:var(--teal);margin-bottom:8px;text-align:center">Pola asli:</div><div class="sym-grid" style="grid-template-columns:repeat(3,52px)">`;
+  q.pattern.forEach(v=>{ html+=`<div class="sym-cell" style="background:${v?'var(--teal)':'#F9FAFB'};color:white">${v?'●':''}</div>`; });
+  html+=`</div></div>`;
+  html+=`<div style="font-size:2rem;display:flex;align-items:center">↔</div>`;
+  html+=`<div><div style="font-weight:700;color:var(--teal);margin-bottom:8px;text-align:center">Cermin:</div><div class="sym-grid" style="grid-template-columns:repeat(3,52px)" id="mirrorGrid">`;
+  q.pattern.forEach((_,idx)=>{ html+=`<div class="sym-cell" id="mr-${idx}" onclick="toggleCell(this,${idx},'mr')"></div>`; });
+  html+=`</div></div>`;
+  html+=`</div>`;
+  return html;
+}
+
+// ---- COUNTING ----
+function renderCounting(q){
+  function dots(n){ let s=''; for(let i=0;i<n;i++) s+='●'; return s; }
+  return `<div style="display:flex;gap:20px;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:20px">
+    <div style="border:3px solid var(--teal);border-radius:10px;padding:16px;font-size:1.8rem;letter-spacing:4px;min-width:80px;text-align:center">${dots(q.a)}</div>
+    <div style="font-size:2rem;font-weight:800">+</div>
+    <div style="border:3px solid var(--teal);border-radius:10px;padding:16px;font-size:1.8rem;letter-spacing:4px;min-width:80px;text-align:center">${dots(q.b)}</div>
+    <div style="font-size:2rem;font-weight:800">=</div>
+    <input class="num-input" type="number" id="countAns" min="1" max="20" placeholder="?">
+  </div>`;
+}
+
+// ---- TRACING ----
+function renderTracing(q){
+  const {size,start,end,path} = q;
+  let html=`<div style="text-align:center;margin-bottom:12px;font-weight:700;color:var(--teal)">Klik sel dari START (🟠) ke END (🟢) secara berurutan!</div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(${size},56px);gap:2px;width:fit-content;margin:0 auto 16px;border:3px solid var(--teal);border-radius:10px;overflow:hidden">`;
+  const pathStr = path.map(p=>p.join(',')).join('|');
+  for(let r=0;r<size;r++) for(let c=0;c<size;c++){
+    const isStart=r===start[0]&&c===start[1];
+    const isEnd=r===end[0]&&c===end[1];
+    const bg=isStart?'var(--orange)':isEnd?'var(--green)':'#F9FAFB';
+    const txt=isStart?'🟠':isEnd?'🟢':'';
+    html+=`<div id="tr-${r}-${c}" style="width:56px;height:56px;background:${bg};border:1px solid #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;transition:background 0.2s" 
+      onclick="traceClick(this,${r},${c},'${pathStr}')">${txt}</div>`;
+  }
+  html+=`</div>`;
+  html+=`<div id="traceStatus" style="text-align:center;font-weight:600;color:var(--muted)">Langkah: 0 / ${path.length-1}</div>`;
+  return html;
+}
+
+let traceClicked=[];
+function traceClick(el,r,c,pathStr){
+  if(answered) return;
+  const path = pathStr.split('|').map(p=>p.split(',').map(Number));
+  const expected = path[traceClicked.length];
+  if(!expected) return;
+  if(r===expected[0]&&c===expected[1]){
+    el.style.background='rgba(249,115,22,0.4)';
+    traceClicked.push([r,c]);
+    document.getElementById('traceStatus').textContent=`Langkah: ${traceClicked.length-1} / ${path.length-1}`;
+    if(traceClicked.length===path.length){
+      // All done
+      document.getElementById('traceStatus').textContent='🎉 Jalur selesai!';
+    }
+  } else {
+    el.style.background='rgba(239,68,68,0.3)';
+    setTimeout(()=>el.style.background='#F9FAFB',500);
+  }
+}
+
+// ---- FIND COORD ----
+function renderFindCoord(q){
+  const rows=['A','B','C','D','E','F'];
+  let html=`<div style="font-weight:700;color:var(--teal);text-align:center;margin-bottom:12px;font-size:1.1rem">Klik kotak di koordinat: <span style="color:var(--orange)">${q.label}</span></div>`;
+  html+=`<div style="overflow-x:auto"><table style="border-collapse:collapse;margin:0 auto">`;
+  for(let r=5;r>=0;r--){
+    html+=`<tr><td style="padding:4px 8px;font-weight:700;color:var(--orange)">${rows[r]}</td>`;
+    for(let c=0;c<6;c++){
+      html+=`<td id="fc-${c}-${r}" onclick="fcClick(this,${c},${r},${q.x},${q.y})"
+        style="width:52px;height:52px;border:2px solid #D1D5DB;background:#F9FAFB;cursor:pointer;text-align:center;transition:background 0.2s;border-radius:6px"></td>`;
+    }
+    html+=`</tr>`;
+  }
+  html+=`<tr><td></td>`;
+  for(let c=1;c<=6;c++) html+=`<td style="text-align:center;padding:4px;font-weight:700;color:var(--orange)">${c}</td>`;
+  html+=`</tr></table></div>`;
+  return html;
+}
+
+function fcClick(el,c,r,tx,ty){
+  if(answered) return;
+  document.querySelectorAll('[id^="fc-"]').forEach(e=>{ e.style.background='#F9FAFB'; e.textContent=''; });
+  el.style.background='var(--orange)';
+  el.textContent='📍';
+  el.dataset.selected=`${c},${r}`;
+}
+
+// ---- CODE / PROGRAM FLOW ----
+function renderCode(q){
+  let html='';
+  if(q.rule) html+=`<div style="background:#E0F2FE;border-left:4px solid #0284C7;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-weight:600;white-space:pre-wrap;font-size:0.95rem;color:#0C4A6E">${q.rule}</div>`;
+  html+=`<div style="background:#1E293B;color:#E2E8F0;padding:16px;border-radius:10px;font-family:monospace;font-size:0.95rem;white-space:pre;margin-bottom:16px;overflow-x:auto">${q.q}</div>`;
+  html+=renderChoiceButtons(q);
+  return html;
+}
+
+// ---- GENERIC CHOICE ----
+function renderChoice(q){
+  let html='';
+  if(q.rule) html+=`<div style="background:#E0F2FE;border-left:4px solid #0284C7;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-weight:600;white-space:pre-wrap;font-size:0.95rem;color:#0C4A6E">${q.rule}</div>`;
+  if(q.seq) html+=`<div style="text-align:center;font-size:1.5rem;font-weight:800;color:var(--teal);margin-bottom:16px;letter-spacing:4px">${q.seq.join(' → ')} → ?</div>`;
+  else if(q.q) html+=`<div style="font-size:1.05rem;font-weight:700;color:var(--teal);margin-bottom:16px;white-space:pre-wrap">${q.q}</div>`;
+  else if(q.nums) html+=`<div style="text-align:center;font-size:1.5rem;font-weight:800;color:var(--teal);margin-bottom:16px">${q.nums.join('  ')}</div>`;
+  html+=renderChoiceButtons(q);
+  return html;
+}
+
+function renderChoiceButtons(q){
+  const opts = q.opts||[];
+  return `<div class="choices">${opts.map((o,i)=>
+    `<button class="choice-btn" id="opt-${i}" data-val="${o}" data-ans="${String(o)===String(q.ans)}" onclick="selectOpt(this)">${o}</button>`
+  ).join('')}</div>`;
+}
+
+function selectOpt(el){
+  if(answered) return;
+  document.querySelectorAll('[id^="opt-"]').forEach(e=>{ e.classList.remove('selected-correct','selected-wrong','reveal-correct'); e.style.borderColor='#E5E7EB'; e.style.background='white'; });
+  el.style.borderColor='var(--orange)'; el.style.background='#FFF3E0';
+  el.dataset.selected='true';
+}
+
+// ============================================================
+//  CHECK ANSWER
+// ============================================================
+function checkAnswer(){
+  if(answered) return;
+  const q = currentTask.questions[currentQIdx];
+  const type = currentTask.type;
+  let correct=false;
+
+  if(type==='combination'){
+    const sel=document.querySelector('[id^="comb-opt-"][data-selected="true"]');
+    if(!sel){ showFeedback(false,'Pilih salah satu jawaban dulu!'); return; }
+    correct = sel.dataset.ans==='true';
+    document.querySelectorAll('[id^="comb-opt-"]').forEach(e=>{
+      if(e.dataset.ans==='true') e.classList.add('reveal-correct');
+      else if(e.dataset.selected==='true') e.classList.add('selected-wrong');
+    });
+
+  } else if(type==='grid_copy'){
+    const cells=q.pattern;
+    let ok=true;
+    cells.forEach((_,idx)=>{
+      const el=document.getElementById(`gc-${idx}`);
+      const expected=q.pattern[idx]===1;
+      const selected=el.classList.contains('selected');
+      if(expected!==selected){ ok=false; el.classList.add('wrong-cell'); }
+      else if(expected) el.classList.add('correct-cell');
+    }); correct=ok;
+
+  } else if(type==='mirror'){
+    let ok=true;
+    q.ans.forEach((v,idx)=>{
+      const el=document.getElementById(`mr-${idx}`);
+      const expected=v===1;
+      const selected=el.classList.contains('selected');
+      if(expected!==selected){ ok=false; el.classList.add('wrong-cell'); }
+      else if(expected) el.classList.add('correct-cell');
+    }); correct=ok;
+
+  } else if(type==='counting'){
+    const val=parseInt(document.getElementById('countAns').value);
+    correct = val===q.ans;
+    document.getElementById('countAns').style.borderColor=correct?'var(--green)':'var(--red)';
+
+  } else if(type==='tracing'){
+    const path=q.path;
+    correct = traceClicked.length===path.length;
+    traceClicked=[];
+
+  } else if(type==='find_coord'){
+    const sel=document.querySelector('[id^="fc-"][data-selected]');
+    if(!sel){ showFeedback(false,'Klik sebuah kotak dulu!'); return; }
+    const [c,r]=sel.dataset.selected.split(',').map(Number);
+    correct=(c===q.x && r===q.y);
+    if(!correct){
+      const target=document.getElementById(`fc-${q.x}-${q.y}`);
+      if(target){ target.style.background='var(--green)'; target.textContent='✅'; }
+    }
+
+  } else {
+    // Choice-based
+    const sel=document.querySelector('[id^="opt-"][data-selected="true"]');
+    if(!sel){ showFeedback(false,'Pilih jawaban dulu!'); return; }
+    correct = sel.dataset.ans==='true';
+    document.querySelectorAll('[id^="opt-"]').forEach(e=>{
+      if(e.dataset.ans==='true') e.classList.add('reveal-correct');
+      else if(e.dataset.selected==='true') e.classList.add('selected-wrong');
+    });
+  }
+
+  answered=true;
+  if(correct) taskPoints+=10;
+  showFeedback(correct, correct?'🎉 Betul! Bagus sekali!':'❌ Belum tepat. Yuk coba lagi di next round!');
+  document.getElementById('checkBtn').style.display='none';
+  document.getElementById('nextBtn').style.display='inline-block';
+}
+
+function showFeedback(correct, msg){
+  const fb=document.getElementById('feedback');
+  fb.className='feedback '+(correct?'correct':'wrong');
+  fb.textContent=msg;
+}
+
+// ============================================================
+//  NEXT QUESTION / TASK COMPLETE
+// ============================================================
+function nextQuestion(){
+  currentQIdx++;
+  if(currentQIdx>=currentTask.questions.length){
+    showTaskComplete();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showTaskComplete(){
+  completedTasks.add(currentTask.id);
+  taskScores[currentTask.id]=taskPoints;
+  saveState(); updateHeader();
+
+  const total=currentTask.questions.length*10;
+  const pct=Math.round(taskPoints/total*100);
+  const stars = pct>=90?3:pct>=60?2:1;
+
+  document.getElementById('taskContent').innerHTML=`
+    <div class="celebration">
+      <span class="big-emoji">🏆</span>
+      <h2>Task Selesai!</h2>
+      <div class="star-row">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+      <p>Skor: <strong>${taskPoints} / ${total} poin</strong> (${pct}%)</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="goHome()">🏠 Menu Utama</button>
+        <button class="btn btn-secondary" onclick="startTask(${currentTask.id})">🔁 Ulangi Task</button>
+        ${currentTask.id<26?`<button class="btn btn-primary" onclick="startTask(${currentTask.id+1})">→ Task ${currentTask.id+1}</button>`:''}
+      </div>
+    </div>`;
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('qDots').innerHTML='';
+  document.getElementById('qLabel').textContent='';
+  document.getElementById('btnRow').style.display='none';
+}
+
+// ============================================================
+//  BOOT
+// ============================================================
+totalScore = Object.values(taskScores).reduce((a,b)=>a+b,0);
+renderHome();
+</script>
+</body>
+</html>
